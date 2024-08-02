@@ -27,7 +27,7 @@ const Navbar = () => {
                 <Box height="100%" width="33vw" alignItems="center" justifyContent="center" display="flex">
                     <Typography>MyPantry</Typography>
                     </Box>
-                <Box height="fit-content" width="33vw" display="flex" justifyContent="flex-end" pr={0}>
+                <Box height="fit-content" width="33vw" display="flex" justifyContent="flex-end" pr={2}>
                     <Typography>Navigate</Typography>
                 </Box>
             </Box>
