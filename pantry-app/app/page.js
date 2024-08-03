@@ -11,14 +11,23 @@ import {
   query,
   updateDoc,
   deleteDoc,
+  setDoc,
 } from "firebase/firestore";
-import { Box, IconButton, Modal, Button, Typography } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  Modal,
+  Button,
+  Typography,
+  TextField,
+} from "@mui/material";
 import React from "react";
 import { FcMinus, FcPlus } from "react-icons/fc";
+import { FaPlusSquare } from "react-icons/fa";
 
 export default function Home() {
   const [pantryList, setPantryList] = useState([]);
-
+  const [searchQuery, setSearchQuery] = useState("");
   const fetchData = async () => {
     const snapshot = query(collection(db, "pantry"));
     const docs = await getDocs(snapshot);
@@ -39,7 +48,7 @@ export default function Home() {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const currentCount = docSnap.data().count;
-      const newCount = currentCount + increment;
+      const newCount = Number(currentCount + increment);
 
       if (newCount <= 0) {
         await deleteDoc(docRef);
@@ -62,17 +71,42 @@ export default function Home() {
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
-    width: 400,
+    width: 600,
     bgcolor: "background.paper",
     border: "2px solid #000",
     boxShadow: 24,
     p: 4,
   };
+
+  const [currItem, setCurrItem] = useState({ name: "", count: 0 });
+
+  async function addItem(name, count) {
+    await setDoc(doc(db, "pantry", name), {
+      count: count,
+    });
+    setCurrItem({ name: "", count: 0 });
+    fetchData();
+  }
+
+  const filteredPantryList = pantryList.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <>
       <Navbar />
       <Box display="flex" width="100vw" height="100vh" justifyContent="center">
         <Box height="auto" width="50vw">
+          <Box display="flex" justifyContent="center">
+            <TextField
+              fullWidth
+              id="search-bar"
+              label="Search"
+              variant="outlined"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </Box>
           <Box alignitems="center" justifyContent="center">
             <Button onClick={handleOpen}>Add an Item</Button>
             <Modal
@@ -82,20 +116,61 @@ export default function Home() {
               aria-describedby="modal-modal-description"
             >
               <Box sx={style}>
-                <Typography id="modal-modal-title" variant="h6" component="h2">
-                  Text in a modal
+                <Typography
+                  id="modal-modal-title"
+                  variant="h6"
+                  component="h2"
+                  pb={2}
+                >
+                  Add an item
                 </Typography>
-                <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                  Duis mollis, est non commodo luctus, nisi erat porttitor
-                  ligula.
-                </Typography>
+                <Box
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  gap={2}
+                >
+                  <TextField
+                    required
+                    id="outlined-required"
+                    label="Item Name"
+                    value={currItem.name} // Use value to control the input
+                    onChange={(e) =>
+                      setCurrItem({ ...currItem, name: e.target.value })
+                    }
+                  />
+                  <TextField
+                    id="filled-number"
+                    label="Quantity"
+                    type="number"
+                    InputLabelProps={{ shrink: true }}
+                    variant="filled"
+                    value={currItem.count} // Use value to control the input
+                    onChange={(e) =>
+                      setCurrItem({
+                        ...currItem,
+                        count: e.target.value,
+                      })
+                    }
+                  />
+                  <Button
+                    variant="contained"
+                    disableElevation
+                    onClick={() => {
+                      addItem(currItem["name"], Number(currItem["count"]));
+                      handleClose();
+                    }}
+                  >
+                    Add Item
+                  </Button>
+                </Box>
               </Box>
             </Modal>
           </Box>
           <Box display="flex" width="100%" height="50px">
             <Box
               display="flex"
-              width="60vw"
+              width="50vw"
               alignItems="center"
               justifyContent="center"
               sx={{ border: "1px solid black" }}
@@ -104,7 +179,7 @@ export default function Home() {
             </Box>
             <Box
               display="flex"
-              width="25vw"
+              width="20vw"
               alignItems="center"
               justifyContent="center"
               sx={{ border: "1px solid black" }}
@@ -113,7 +188,7 @@ export default function Home() {
             </Box>
             <Box
               display="flex"
-              width="15vw"
+              width="30vw"
               alignItems="center"
               justifyContent="center"
               sx={{ border: "1px solid black" }}
@@ -121,13 +196,13 @@ export default function Home() {
               Add/Remove
             </Box>
           </Box>
-          {pantryList.map((item) => {
+          {filteredPantryList.map((item) => {
             return (
               <Box key={item.name}>
                 <Box display="flex" height="50px">
                   <Box
                     display="flex"
-                    width="60%"
+                    width="50%"
                     justifyContent="center"
                     alignItems="center"
                   >
@@ -135,7 +210,7 @@ export default function Home() {
                   </Box>
                   <Box
                     display="flex"
-                    width="25%"
+                    width="20%"
                     justifyContent="center"
                     alignItems="center"
                   >
@@ -143,7 +218,7 @@ export default function Home() {
                   </Box>
                   <Box
                     display="flex"
-                    width="15%"
+                    width="30%"
                     justifyContent="center"
                     alignItems="center"
                   >
